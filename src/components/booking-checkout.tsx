@@ -11,14 +11,18 @@ import {
   CreditCard,
   Wallet,
   Users,
-  DollarSign,
+  Banknote,
   CheckCircle2,
   Smartphone,
-  Download,
+  Home,
+  Users2,
+  Video,
 } from "lucide-react"
 import { Calendar } from "./ui/calendar"
 import { Alert, AlertDescription } from "./ui/alert"
 import { useClinicStore } from "../store/clinic-store"
+import img from "../assets/playstore.png"
+import img2 from "../assets/apple.png"
 
 interface BookingCheckoutProps {
   appointment: {
@@ -33,16 +37,57 @@ interface BookingCheckoutProps {
   onBack: () => void
 }
 
+const DELIVERY_METHOD_NAMES = {
+  0: "Home Service",
+  1: "In-Person",
+  2: "Online Session",
+}
+
+const DELIVERY_METHOD_ICONS = {
+  "Home Service": Home,
+  "In-Person": Users2,
+  "Online Session": Video,
+}
+
 export function BookingCheckout({ appointment, quantity, onBack }: BookingCheckoutProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("")
+  const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState("") // Added delivery method state
   const [isBooked, setIsBooked] = useState(false)
+  const [discountCode, setDiscountCode] = useState("")
+  const [discountAmount, setDiscountAmount] = useState(0)
 
   const { clinicData, availableSlots, slotsLoading, fetchAvailableSlots } = useClinicStore()
 
   const pricePerPerson = appointment.price
-  const totalPrice = pricePerPerson * quantity
+  const subtotal = pricePerPerson * quantity
+  const totalPrice = subtotal - discountAmount
+
+  const capitalize = (str: string) => {
+    if (!str) return ""
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ")
+  }
+
+  const availableDeliveryMethods = Array.isArray(clinicData?.deliveryMethods)
+    ? clinicData.deliveryMethods.map(
+        (method) => DELIVERY_METHOD_NAMES[Number(method) as keyof typeof DELIVERY_METHOD_NAMES] || method,
+      )
+    : []
+
+  const handleApplyDiscount = () => {
+    if (discountCode.toUpperCase() === "SAVE10") {
+      setDiscountAmount(subtotal * 0.1) // 10% discount
+    } else if (discountCode.toUpperCase() === "SAVE20") {
+      setDiscountAmount(subtotal * 0.2) // 20% discount
+    } else {
+      setDiscountAmount(0)
+      alert("Invalid discount code")
+    }
+  }
 
   useEffect(() => {
     if (selectedDate && clinicData?.username) {
@@ -86,6 +131,9 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
               <strong>Number of People:</strong> {quantity}
             </p>
             <p>
+              <strong>Delivery Method:</strong> {selectedDeliveryMethod}
+            </p>
+            <p>
               <strong>Total Amount:</strong> {totalPrice.toLocaleString()} {appointment.currencySymbol}
             </p>
           </div>
@@ -117,7 +165,7 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                 className="h-full w-full object-cover"
               />
             </div>
-            <h3 className="font-serif text-xl font-bold mb-2">{appointment.testName}</h3>
+            <h3 className="text-xl font-bold mb-2">{capitalize(appointment.testName)}</h3>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
               {appointment.description || "No description available"}
             </p>
@@ -130,15 +178,52 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                 </div>
                 <span className="font-semibold">{quantity}</span>
               </div>
+
+              {selectedDeliveryMethod === "Home Service" && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Delivery</span>
+                    <span className="font-semibold">0 {appointment.currencySymbol}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground italic">*Delivery fee may apply (varies by clinic)</p>
+                </div>
+              )}
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <DollarSign className="h-4 w-4" />
+                  <Banknote className="h-4 w-4" />
                   <span>Price per Person</span>
                 </div>
                 <span className="font-semibold">
                   {pricePerPerson.toLocaleString()} {appointment.currencySymbol}
                 </span>
               </div>
+
+              <div className="border-t pt-3">
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Apply Discount Code</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter code"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    className="flex-1 rounded-lg border border-border h-[40px] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleApplyDiscount}
+                    className="bg-[#FBAE24] h-[40px] hover:bg-[#FBAE24]/90 text-white"
+                  >
+                    Apply
+                  </Button>
+                </div>
+                {discountAmount > 0 && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Discount: -{discountAmount.toLocaleString()} {appointment.currencySymbol}
+                  </p>
+                )}
+              </div>
+
               <div className="flex items-center justify-between border-t pt-3">
                 <span className="font-semibold">Total Price</span>
                 <span className="text-xl font-bold text-[#FBAE24]">
@@ -163,7 +248,7 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                className="rounded-md border"
+                className="rounded-md border cursor-pointer"
               />
             </div>
           </Card>
@@ -201,6 +286,41 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
             )}
           </Card>
 
+          <Card className="p-6 shadow-md">
+            <h3 className="font-semibold text-lg mb-4">Select Delivery Method</h3>
+            {availableDeliveryMethods.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No delivery methods available</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-3">
+                {availableDeliveryMethods.map((method) => {
+                  const IconComponent = DELIVERY_METHOD_ICONS[method as keyof typeof DELIVERY_METHOD_ICONS]
+                  return (
+                    <button
+                      key={method}
+                      onClick={() => setSelectedDeliveryMethod(method)}
+                      className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 sm:p-6 transition-all ${
+                        selectedDeliveryMethod === method
+                          ? "border-[#FBAE24] bg-[#FBAE24]/10"
+                          : "border-border hover:border-[#FBAE24]/50"
+                      }`}
+                    >
+                      <div
+                        className={`rounded-full p-2 sm:p-3 ${
+                          selectedDeliveryMethod === method
+                            ? "bg-[#FBAE24] text-white"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {IconComponent && <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />}
+                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-center text-foreground">{method}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+
           {/* Info alert */}
           <Alert className="border-[#FBAE24] bg-[#FBAE24]/10">
             <Smartphone className="h-4 w-4 text-[#FBAE24]" />
@@ -209,25 +329,25 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
               <p className="text-sm text-muted-foreground mb-3">
                 To pay with insurance, please download our mobile app for a seamless experience.
               </p>
-              <div className="flex gap-3">
-                <a
-                  href="https://apps.apple.com/rw/app/lifeline-clinics/id6749456432"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-[#FBAE24] hover:underline"
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  className="w-full sm:w-[250px] cursor-pointer h-[50px] bg-[#000] text-white hover:bg-[#000]"
+                  size="lg"
+                  onClick={() =>
+                    window.open("https://play.google.com/store/apps/details?id=com.sanni9407.lifelineclinics", "_blank")
+                  }
                 >
-                  <Download className="h-4 w-4" />
-                  Download for iOS
-                </a>
-                <a
-                  href="https://play.google.com/store/apps/details?id=com.sanni9407.lifelineclinics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-[#FBAE24] hover:underline"
+                  <img src={img || "/placeholder.svg"} alt="" className="h-[25px]" />
+                  Download on Google Play
+                </Button>
+                <Button
+                  className="w-full sm:w-[250px] cursor-pointer h-[50px] bg-foreground text-background hover:bg-[#000]"
+                  size="lg"
+                  onClick={() => window.open("https://apps.apple.com/rw/app/lifeline-clinics/id6749456432", "_blank")}
                 >
-                  <Download className="h-4 w-4" />
-                  Download for Android
-                </a>
+                  <img src={img2 || "/placeholder.svg"} alt="" className="h-[35px]" />
+                  Download on App Store
+                </Button>
               </div>
             </AlertDescription>
           </Alert>
@@ -265,6 +385,11 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                     <span className="font-medium">Mobile Money (PawaPay)</span>
                   </Label>
                 </div>
+                {paymentMethod === "mobile" && (
+                  <p className="text-xs text-muted-foreground italic ml-10 -mt-2">
+                    *Only Rwanda phone numbers are accepted
+                  </p>
+                )}
               </div>
             </RadioGroup>
           </Card>
@@ -274,7 +399,7 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
             size="lg"
             className="w-full bg-[#FBAE24] text-white hover:bg-[#FBAE24]/90 shadow-lg"
             onClick={() => setIsBooked(true)}
-            disabled={!selectedDate || !selectedTime || !paymentMethod}
+            disabled={!selectedDate || !selectedTime || !paymentMethod || !selectedDeliveryMethod}
           >
             Confirm Booking
           </Button>

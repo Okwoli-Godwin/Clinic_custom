@@ -26,6 +26,14 @@ interface AppointmentDetailProps {
 export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDetailProps) {
   const [quantity, setQuantity] = useState(1)
 
+  const capitalize = (str: string) => {
+    if (!str) return ""
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ")
+  }
+
   const increaseQuantity = () => setQuantity((prev) => prev + 1)
   const decreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1))
 
@@ -68,7 +76,7 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
 
           <div className="order-2 lg:order-2">
             <div className="flex items-start justify-between mb-6">
-              <h1 className="text-[20px] sm:text-1xl font-bold">{appointment.testName}</h1>
+              <h1 className="text-[20px] sm:text-1xl font-bold">{capitalize(appointment.testName)}</h1>
               <Button variant="ghost" size="icon" onClick={handleShare} className="shrink-0">
                 <Share2 className="h-6 w-6" />
               </Button>
@@ -99,8 +107,7 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
               </div>
               <div className="text-right">
                 <p className="text-1xl font-bold">
-                  {appointment.price.toLocaleString()}
-                  {appointment.currencySymbol}
+                  {appointment.price.toLocaleString()} {appointment.currencySymbol}
                 </p>
               </div>
             </div>

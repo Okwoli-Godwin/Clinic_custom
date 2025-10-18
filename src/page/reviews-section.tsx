@@ -20,6 +20,14 @@ interface ReviewsSectionProps {
 export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   const [showAppDialog, setShowAppDialog] = useState(false)
 
+  const capitalize = (str: string) => {
+    if (!str) return ""
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ")
+  }
+
   if (reviews.length === 0) {
     return (
       <div className="mb-8">
@@ -60,7 +68,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
             <Card key={review.reviewNo} className="p-6 shadow-md">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-lg">{review.patientName}</p>
+                  <p className="font-semibold text-lg">{capitalize(review.patientName)}</p>
                   <div className="flex items-center gap-1">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star

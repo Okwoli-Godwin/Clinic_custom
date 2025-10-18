@@ -25,10 +25,6 @@ export function NotFound() {
           Sorry, the clinic you're looking for doesn't exist or may have been removed. Please check the URL and try
           again.
         </p>
-
-
-        {/* Additional Help Text */}
-        <p className="text-xs text-muted-foreground mt-8">If you believe this is an error, please contact support.</p>
       </div>
     </div>
   )
