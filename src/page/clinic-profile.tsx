@@ -33,6 +33,7 @@ export function ClinicProfile() {
   const { clinicData, isLoading, error, fetchClinicData } = useClinicStore()
   const [showFullBio, setShowFullBio] = useState(false)
   const insuranceScrollRef = useRef<HTMLDivElement>(null)
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const capitalize = (str: string) => {
     if (!str) return ""
@@ -73,9 +74,9 @@ export function ClinicProfile() {
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code)
+    setCopiedCode(code)
+    setTimeout(() => setCopiedCode(null), 2000)
   }
-
-
 
   const supportedInsurance = clinicData?.supportInsurance
     ?.map((id) => INSURANCE_OPTIONS.find((opt) => opt.id === id)?.name)
@@ -203,7 +204,7 @@ export function ClinicProfile() {
           </div>
         </Card>
 
-        {/* ✅ Supported Insurance Section - UPDATED */}
+        {/* Supported Insurance Section */}
         <div className="mb-12">
           <h2 className="font-bold text-[18px] sm:text-[20px] mb-6 text-center">Supported Insurance</h2>
 
@@ -247,6 +248,7 @@ export function ClinicProfile() {
         <div className="mb-12">
           <h2 className="font-bold text-[18px] text-center sm:text-left sm:text-[20px] mb-4">Active Discount Codes</h2>
           <div className="bg-green-50/50 rounded-2xl p-4 space-y-3 border border-green-100">
+            {/* HEALTH20 Code Card */}
             <Card className="p-4 bg-white border-green-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -258,13 +260,21 @@ export function ClinicProfile() {
                 </div>
                 <button
                   onClick={() => handleCopyCode("HEALTH20")}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className={`transition-all duration-200 flex-shrink-0 ${
+                    copiedCode === "HEALTH20" ? "text-green-600" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title={copiedCode === "HEALTH20" ? "Copied!" : "Copy code"}
                 >
-                  <Copy className="h-5 w-5" />
+                  {copiedCode === "HEALTH20" ? (
+                    <span className="text-xs font-medium">✓ Copied</span>
+                  ) : (
+                    <Copy className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </Card>
 
+            {/* FAICALI5 Code Card */}
             <Card className="p-4 bg-white border-green-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -276,9 +286,16 @@ export function ClinicProfile() {
                 </div>
                 <button
                   onClick={() => handleCopyCode("FAICALI5")}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className={`transition-all duration-200 flex-shrink-0 ${
+                    copiedCode === "FAICALI5" ? "text-green-600" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title={copiedCode === "FAICALI5" ? "Copied!" : "Copy code"}
                 >
-                  <Copy className="h-5 w-5" />
+                  {copiedCode === "FAICALI5" ? (
+                    <span className="text-xs font-medium">✓ Copied</span>
+                  ) : (
+                    <Copy className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </Card>
