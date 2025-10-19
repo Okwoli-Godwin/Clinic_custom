@@ -121,6 +121,50 @@ export function ClinicProfile() {
           </Badge>
         </div>
 
+        {/* About Section */}
+        <Card className="mb-4 p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
+              <Info className="h-5 w-5 text-[#FBAE24]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground mb-2">About</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{displayBio}</p>
+              {shouldTruncate && (
+                <button
+                  onClick={() => setShowFullBio(!showFullBio)}
+                  className="mt-2 text-sm text-[#FBAE24] hover:text-[#e09d1f] font-medium"
+                >
+                  {showFullBio ? "Read less" : "Read more >"}
+                </button>
+              )}
+            </div>
+          </div>
+        </Card>
+
+                {/* Languages Spoken Section */}
+        <Card className="mb-4 p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
+              <MessageSquare className="h-5 w-5 text-[#FBAE24]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground mb-3">Languages Spoken</h3>
+              <div className="flex flex-wrap gap-2">
+                {languagesSpoken.length > 0 ? (
+                  languagesSpoken.map((language: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
+                      {language}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No languages added yet</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* Address Section */}
         <Card className="mb-4 p-4 shadow-sm">
           <div className="flex items-start gap-3">
@@ -156,50 +200,6 @@ export function ClinicProfile() {
                   <p className="text-sm text-muted-foreground italic">No delivery methods added yet</p>
                 )}
               </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Languages Spoken Section */}
-        <Card className="mb-4 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
-              <MessageSquare className="h-5 w-5 text-[#FBAE24]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-3">Languages Spoken</h3>
-              <div className="flex flex-wrap gap-2">
-                {languagesSpoken.length > 0 ? (
-                  languagesSpoken.map((language: string, index: number) => (
-                    <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
-                      {language}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No languages added yet</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* About Section */}
-        <Card className="mb-4 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
-              <Info className="h-5 w-5 text-[#FBAE24]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-2">About</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{displayBio}</p>
-              {shouldTruncate && (
-                <button
-                  onClick={() => setShowFullBio(!showFullBio)}
-                  className="mt-2 text-sm text-[#FBAE24] hover:text-[#e09d1f] font-medium"
-                >
-                  {showFullBio ? "Read less" : "Read more >"}
-                </button>
-              )}
             </div>
           </div>
         </Card>
