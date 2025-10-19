@@ -37,6 +37,7 @@ interface ClinicData {
   bio: string
   avatar: string
   location: Location
+  address?: string
   languages: string[]
   deliveryMethods: string[]
   onlineStatus: string
@@ -70,9 +71,7 @@ export const useClinicStore = create<ClinicStore>((set) => ({
   fetchClinicData: async (username: string) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch(
-        `https://clinic-backend.mylifeline.world/api/v1/clinic/public/${username}`
-      )
+      const response = await fetch(`https://clinic-backend.mylifeline.world/api/v1/clinic/public/${username}`)
 
       if (!response.ok) {
         throw new Error("Failed to fetch clinic data")
@@ -80,7 +79,11 @@ export const useClinicStore = create<ClinicStore>((set) => ({
 
       const result = await response.json()
       if (result.success) {
-        set({ clinicData: result.data, isLoading: false })
+        const clinicData = result.data
+        if (clinicData.location) {
+          clinicData.address = `${clinicData.location.street}, ${clinicData.location.cityOrDistrict}, ${clinicData.location.stateOrProvince} ${clinicData.location.postalCode}`
+        }
+        set({ clinicData, isLoading: false })
       } else {
         throw new Error(result.message || "Failed to fetch clinic data")
       }
@@ -94,7 +97,7 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     set({ slotsLoading: true, slotsError: null })
     try {
       const response = await fetch(
-        `https://clinic-backend.mylifeline.world/api/v1/clinic/public/${username}/slots?date=${date}`
+        `https://clinic-backend.mylifeline.world/api/v1/clinic/public/${username}/slots?date=${date}`,
       )
 
       if (!response.ok) {
