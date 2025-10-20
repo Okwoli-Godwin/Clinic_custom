@@ -114,14 +114,14 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
 
             <div className="grid grid-cols-1 gap-6 mb-8">
               <div className="flex items-start gap-4">
-                <Clock className="h-6 w-6 shrink-0 mt-1" />
+                <Clock className="h-6 w-6 shrink-0" />
                 <div>
                   <p className="font-medium">Results within {appointment.turnaroundTime}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <ClipboardList className="h-6 w-6 shrink-0 mt-1" />
+                <ClipboardList className="h-6 w-6 shrink-0" />
                 <div>
                   <p className="font-medium">
                     Pre-Test Requirements: <span className="font-normal">{appointment.preTestRequirements}</span>
@@ -130,14 +130,14 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
               </div>
 
               <div className="flex items-start gap-4">
-                <FileText className="h-6 w-6 shrink-0 mt-1" />
+                <FileText className="h-6 w-6 shrink-0" />
                 <div>
                   <p className="text-foreground">{appointment.description || "No description available"}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <Home className="h-6 w-6 shrink-0 mt-1" />
+                <Home className="h-6 w-6 shrink-0" />
                 <div>
                   <p className="font-medium">
                     Home Collection: <span className="font-normal capitalize">{appointment.homeCollection}</span>
@@ -146,7 +146,7 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
               </div>
 
               <div className="flex items-start gap-4">
-                <Beaker className="h-6 w-6 shrink-0 mt-1" />
+                <Beaker className="h-6 w-6 shrink-0" />
                 <div>
                   <p className="font-medium">
                     Clinic: <span className="font-normal">{appointment.clinicName}</span>
@@ -155,7 +155,7 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
               </div>
 
               <div className="flex items-start gap-4">
-                <Heart className="h-6 w-6 shrink-0 mt-1" />
+                <Heart className="h-6 w-6 shrink-0" />
                 <div>
                   <p className="font-medium">
                     Insurance Coverage: <span className="font-normal capitalize">{appointment.insuranceCoverage}</span>
