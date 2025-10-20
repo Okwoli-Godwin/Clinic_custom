@@ -30,6 +30,13 @@ interface Test {
   clinicName: string
 }
 
+interface DiscountCode {
+  code: string
+  discount: number
+  validUntil: string
+  description?: string
+}
+
 interface ClinicData {
   clinicId: number
   clinicName: string
@@ -46,6 +53,7 @@ interface ClinicData {
   isVerified: boolean
   reviews: Review[]
   tests: Test[]
+  discountCodes?: DiscountCode[]
 }
 
 interface ClinicStore {
@@ -55,8 +63,12 @@ interface ClinicStore {
   availableSlots: string[]
   slotsLoading: boolean
   slotsError: string | null
+  discountCodes: DiscountCode[]
+  discountCodesLoading: boolean
+  discountCodesError: string | null
   fetchClinicData: (username: string) => Promise<void>
   fetchAvailableSlots: (username: string, date: string) => Promise<void>
+  fetchDiscountCodes: (clinicId: number) => Promise<void>
 }
 
 export const useClinicStore = create<ClinicStore>((set) => ({
@@ -66,6 +78,9 @@ export const useClinicStore = create<ClinicStore>((set) => ({
   availableSlots: [],
   slotsLoading: false,
   slotsError: null,
+  discountCodes: [],
+  discountCodesLoading: false,
+  discountCodesError: null,
 
   // ✅ Fetch clinic data by username
   fetchClinicData: async (username: string) => {
@@ -112,6 +127,30 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       }
     } catch (error) {
       set({ slotsError: (error as Error).message, slotsLoading: false, availableSlots: [] })
+    }
+  },
+
+  fetchDiscountCodes: async (clinicId: number) => {
+    set({ discountCodesLoading: true, discountCodesError: null })
+    try {
+      const response = await fetch(`https://clinic-backend.mylifeline.world/api/v1/discount/clinic/${clinicId}`)
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch discount codes")
+      }
+
+      const result = await response.json()
+      if (result.success && result.data) {
+        set({ discountCodes: result.data, discountCodesLoading: false })
+      } else {
+        set({ discountCodes: [], discountCodesLoading: false })
+      }
+    } catch (error) {
+      set({
+        discountCodesError: (error as Error).message,
+        discountCodesLoading: false,
+        discountCodes: [],
+      })
     }
   },
 }))

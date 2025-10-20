@@ -30,7 +30,8 @@ const DELIVERY_METHOD_NAMES = {
 export function ClinicProfile() {
   const { clinicSlug } = useParams<{ clinicSlug: string }>()
   const navigate = useNavigate()
-  const { clinicData, isLoading, error, fetchClinicData } = useClinicStore()
+  const { clinicData, isLoading, error, fetchClinicData, discountCodes, discountCodesLoading, fetchDiscountCodes } =
+    useClinicStore()
   const [showFullBio, setShowFullBio] = useState(false)
   const insuranceScrollRef = useRef<HTMLDivElement>(null)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
@@ -50,6 +51,12 @@ export function ClinicProfile() {
     }
     fetchClinicData(clinicSlug)
   }, [clinicSlug, fetchClinicData, navigate])
+
+  useEffect(() => {
+    if (clinicData?.clinicId) {
+      fetchDiscountCodes(clinicData.clinicId)
+    }
+  }, [clinicData?.clinicId, fetchDiscountCodes])
 
   if (isLoading) {
     return (
@@ -100,7 +107,7 @@ export function ClinicProfile() {
         {/* Header Section */}
         <div className="mb-8 flex flex-col items-center text-center">
           <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
-            <AvatarImage src={clinicData.avatar || "/placeholder.svg"} alt={clinicData.clinicName} />
+            <AvatarImage src={clinicData.avatar || "/placeholder.svg"} alt={clinicData.clinicName} className="object-cover"/>
             <AvatarFallback className="bg-[#FBAE24] text-2xl text-white sm:text-3xl">
               {clinicData.clinicName?.substring(0, 2).toUpperCase() || "CL"}
             </AvatarFallback>
@@ -249,59 +256,53 @@ export function ClinicProfile() {
         {/* Active Discount Codes */}
         <div className="mb-12">
           <h2 className="font-bold text-[18px] text-center sm:text-left sm:text-[20px] mb-4">Active Discount Codes</h2>
-          <div className="bg-green-50/50 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 border border-green-100">
-            {/* HEALTH20 Code Card */}
-            <Card className="p-4 bg-white border-green-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-foreground">HEALTH20</span>
-                    <Badge className="bg-green-500 text-white text-xs hover:bg-green-500">10% off</Badge>
+          {discountCodesLoading ? (
+            <div className="bg-green-50/50 rounded-2xl p-4 border border-green-100">
+              <p className="text-center text-sm text-muted-foreground">Loading discount codes...</p>
+            </div>
+          ) : discountCodes && discountCodes.length > 0 ? (
+            <div className="bg-green-50/50 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 border border-green-100">
+              {discountCodes.map((discountCode, index) => (
+                <Card key={index} className="p-4 bg-white border-green-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-foreground">{discountCode.code}</span>
+                        <Badge className="bg-green-500 text-white text-xs hover:bg-green-500">
+                          {discountCode.discount}% off
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Valid until {discountCode.validUntil}</p>
+                      {discountCode.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{discountCode.description}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleCopyCode(discountCode.code)}
+                      className={`transition-all duration-200 flex-shrink-0 ${
+                        copiedCode === discountCode.code
+                          ? "text-green-600"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      title={copiedCode === discountCode.code ? "Copied!" : "Copy code"}
+                    >
+                      {copiedCode === discountCode.code ? (
+                        <span className="text-xs font-medium">✓ Copied</span>
+                      ) : (
+                        <Copy className="h-5 w-5" />
+                      )}
+                    </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Valid until Sep 3</p>
-                </div>
-                <button
-                  onClick={() => handleCopyCode("HEALTH20")}
-                  className={`transition-all duration-200 flex-shrink-0 ${
-                    copiedCode === "HEALTH20" ? "text-green-600" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title={copiedCode === "HEALTH20" ? "Copied!" : "Copy code"}
-                >
-                  {copiedCode === "HEALTH20" ? (
-                    <span className="text-xs font-medium">✓ Copied</span>
-                  ) : (
-                    <Copy className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </Card>
-
-            {/* FAICALI5 Code Card */}
-            <Card className="p-4 bg-white border-green-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-foreground">FAICALI5</span>
-                    <Badge className="bg-green-500 text-white text-xs hover:bg-green-500">10% off</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Valid until Aug 30</p>
-                </div>
-                <button
-                  onClick={() => handleCopyCode("FAICALI5")}
-                  className={`transition-all duration-200 flex-shrink-0 ${
-                    copiedCode === "FAICALI5" ? "text-green-600" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title={copiedCode === "FAICALI5" ? "Copied!" : "Copy code"}
-                >
-                  {copiedCode === "FAICALI5" ? (
-                    <span className="text-xs font-medium">✓ Copied</span>
-                  ) : (
-                    <Copy className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </Card>
-          </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-green-50/50 rounded-2xl p-4 border border-green-100">
+              <p className="text-center text-sm text-muted-foreground">
+                No active discount codes available at this time.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Reviews Section */}
