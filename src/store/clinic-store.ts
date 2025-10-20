@@ -66,6 +66,10 @@ interface ClinicStore {
   discountCodes: DiscountCode[]
   discountCodesLoading: boolean
   discountCodesError: string | null
+  applyDiscountCode: (
+    clinicId: number,
+    code: string,
+  ) => Promise<{ success: boolean; discount?: number; message?: string }>
   fetchClinicData: (username: string) => Promise<void>
   fetchAvailableSlots: (username: string, date: string) => Promise<void>
   fetchDiscountCodes: (clinicId: number) => Promise<void>
@@ -151,6 +155,44 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         discountCodesLoading: false,
         discountCodes: [],
       })
+    }
+  },
+
+  applyDiscountCode: async (clinicId: number, code: string) => {
+    try {
+      const response = await fetch("https://clinic-backend.mylifeline.world/api/v1/discount/patient/apply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clinicId: clinicId.toString(),
+          code: code.toUpperCase(),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to apply discount code")
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        return {
+          success: true,
+          discount: result.data?.discount || 0,
+          message: result.message || "Discount applied successfully",
+        }
+      } else {
+        return {
+          success: false,
+          message: result.message || "Invalid discount code",
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: (error as Error).message || "Failed to apply discount code",
+      }
     }
   },
 }))

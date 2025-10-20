@@ -107,7 +107,7 @@ export function ClinicProfile() {
         {/* Header Section */}
         <div className="mb-8 flex flex-col items-center text-center">
           <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
-            <AvatarImage src={clinicData.avatar || "/placeholder.svg"} alt={clinicData.clinicName} className="object-cover"/>
+            <AvatarImage src={clinicData.avatar || "/placeholder.svg"} alt={clinicData.clinicName} />
             <AvatarFallback className="bg-[#FBAE24] text-2xl text-white sm:text-3xl">
               {clinicData.clinicName?.substring(0, 2).toUpperCase() || "CL"}
             </AvatarFallback>
@@ -218,10 +218,12 @@ export function ClinicProfile() {
           <h2 className="font-bold text-[18px] sm:text-[20px] mb-6 text-center">Supported Insurance</h2>
 
           {supportedInsurance && supportedInsurance.length > 0 ? (
-            <div className="relative w-full">
+            <div className={`relative w-full ${supportedInsurance.length === 1 ? "flex justify-center" : ""}`}>
               <div
                 ref={insuranceScrollRef}
-                className="flex gap-4 overflow-x-auto pb-4 scroll-smooth hide-scrollbar"
+                className={`flex gap-4 pb-4 scroll-smooth hide-scrollbar ${
+                  supportedInsurance.length === 1 ? "justify-center" : "overflow-x-auto"
+                }`}
                 style={{ scrollBehavior: "smooth" }}
               >
                 {supportedInsurance.map((insurance: string, index: number) => (

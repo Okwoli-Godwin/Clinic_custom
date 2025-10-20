@@ -5,7 +5,23 @@ import { Card } from "./ui/card"
 import { Button } from "./ui/button"
 import { Label } from "./ui/label"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
-import { CalendarIcon, Clock, CreditCard, Wallet, Users, Banknote, CheckCircle2, Smartphone, Home, Users2, Video, MapPin, Mail, Phone, User } from 'lucide-react'
+import {
+  CalendarIcon,
+  Clock,
+  CreditCard,
+  Wallet,
+  Users,
+  Banknote,
+  CheckCircle2,
+  Smartphone,
+  Home,
+  Users2,
+  Video,
+  MapPin,
+  Mail,
+  Phone,
+  User,
+} from "lucide-react"
 import { Calendar } from "./ui/calendar"
 import { Alert, AlertDescription } from "./ui/alert"
 import { useClinicStore } from "../store/clinic-store"
@@ -45,13 +61,16 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
   const [isBooked, setIsBooked] = useState(false)
   const [discountCode, setDiscountCode] = useState("")
   const [discountAmount, setDiscountAmount] = useState(0)
+  const [discountError, setDiscountError] = useState("")
+  const [discountLoading, setDiscountLoading] = useState(false)
+  const [discountSuccess, setDiscountSuccess] = useState(false)
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
 
-  const { clinicData, availableSlots, slotsLoading, fetchAvailableSlots } = useClinicStore()
+  const { clinicData, availableSlots, slotsLoading, fetchAvailableSlots, applyDiscountCode } = useClinicStore()
 
   const pricePerPerson = appointment.price
   const subtotal = pricePerPerson * quantity
@@ -71,15 +90,35 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
       )
     : []
 
-  const handleApplyDiscount = () => {
-    if (discountCode.toUpperCase() === "SAVE10") {
-      setDiscountAmount(subtotal * 0.1)
-    } else if (discountCode.toUpperCase() === "SAVE20") {
-      setDiscountAmount(subtotal * 0.2)
-    } else {
-      setDiscountAmount(0)
-      alert("Invalid discount code")
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) {
+      setDiscountError("Please enter a discount code")
+      return
     }
+
+    if (!clinicData?.clinicId) {
+      setDiscountError("Clinic information not available")
+      return
+    }
+
+    setDiscountLoading(true)
+    setDiscountError("")
+    setDiscountSuccess(false)
+
+    const result = await applyDiscountCode(clinicData.clinicId, discountCode)
+
+    if (result.success && result.discount) {
+      const discountValue = (subtotal * result.discount) / 100
+      setDiscountAmount(discountValue)
+      setDiscountSuccess(true)
+      setDiscountCode("")
+      setTimeout(() => setDiscountSuccess(false), 3000)
+    } else {
+      setDiscountError(result.message || "Invalid discount code")
+      setDiscountAmount(0)
+    }
+
+    setDiscountLoading(false)
   }
 
   useEffect(() => {
@@ -279,17 +318,25 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                     placeholder="Enter code"
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
-                    className="flex-1 rounded-lg border border-border h-[40px] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                    disabled={discountLoading}
+                    className="flex-1 rounded-lg border border-border h-[40px] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24] disabled:opacity-50"
                   />
                   <Button
                     size="sm"
                     onClick={handleApplyDiscount}
-                    className="bg-[#FBAE24] h-[40px] hover:bg-[#FBAE24]/90 text-white"
+                    disabled={discountLoading}
+                    className="bg-[#FBAE24] h-[40px] hover:bg-[#FBAE24]/90 text-white disabled:opacity-50"
                   >
-                    Apply
+                    {discountLoading ? "Applying..." : "Apply"}
                   </Button>
                 </div>
-                {discountAmount > 0 && (
+                {discountError && <p className="text-xs text-red-600 mt-2">{discountError}</p>}
+                {discountSuccess && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Discount applied! Saving {discountAmount.toLocaleString()} {appointment.currencySymbol}
+                  </p>
+                )}
+                {discountAmount > 0 && !discountSuccess && (
                   <p className="text-xs text-green-600 mt-2">
                     Discount: -{discountAmount.toLocaleString()} {appointment.currencySymbol}
                   </p>
