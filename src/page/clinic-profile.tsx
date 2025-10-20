@@ -121,88 +121,90 @@ export function ClinicProfile() {
           </Badge>
         </div>
 
-        {/* About Section */}
-        <Card className="mb-4 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
-              <Info className="h-5 w-5 text-[#FBAE24]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-2">About</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{displayBio}</p>
-              {shouldTruncate && (
-                <button
-                  onClick={() => setShowFullBio(!showFullBio)}
-                  className="mt-2 text-sm text-[#FBAE24] hover:text-[#e09d1f] font-medium"
-                >
-                  {showFullBio ? "Read less" : "Read more >"}
-                </button>
-              )}
-            </div>
-          </div>
-        </Card>
-
-                {/* Languages Spoken Section */}
-        <Card className="mb-4 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
-              <MessageSquare className="h-5 w-5 text-[#FBAE24]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-3">Languages Spoken</h3>
-              <div className="flex flex-wrap gap-2">
-                {languagesSpoken.length > 0 ? (
-                  languagesSpoken.map((language: string, index: number) => (
-                    <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
-                      {language}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No languages added yet</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+          {/* About Section */}
+          <Card className="p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
+                <Info className="h-5 w-5 text-[#FBAE24]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-2">About</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{displayBio}</p>
+                {shouldTruncate && (
+                  <button
+                    onClick={() => setShowFullBio(!showFullBio)}
+                    className="mt-2 text-sm text-[#FBAE24] hover:text-[#e09d1f] font-medium"
+                  >
+                    {showFullBio ? "Read less" : "Read more >"}
+                  </button>
                 )}
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Address Section */}
-        <Card className="mb-4 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
-              <MapPin className="h-5 w-5 text-[#FBAE24]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-1">Address</h3>
-              <p className="text-sm text-muted-foreground">
-                {clinicData.location?.street}, {clinicData.location?.cityOrDistrict},{" "}
-                {clinicData.location?.stateOrProvince}, {clinicData.country}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Delivery Methods Section */}
-        <Card className="mb-4 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
-              <Building2 className="h-5 w-5 text-[#FBAE24]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-3">Delivery Methods</h3>
-              <div className="flex flex-wrap gap-2">
-                {deliveryMethods.length > 0 ? (
-                  deliveryMethods.map((method) => (
-                    <Badge key={method} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
-                      {method}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No delivery methods added yet</p>
-                )}
+          {/* Languages Spoken Section */}
+          <Card className="p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
+                <MessageSquare className="h-5 w-5 text-[#FBAE24]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-3">Languages Spoken</h3>
+                <div className="flex flex-wrap gap-2">
+                  {languagesSpoken.length > 0 ? (
+                    languagesSpoken.map((language: string, index: number) => (
+                      <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
+                        {language}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No languages added yet</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Address Section */}
+          <Card className="p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
+                <MapPin className="h-5 w-5 text-[#FBAE24]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-1">Address</h3>
+                <p className="text-sm text-muted-foreground">
+                  {clinicData.location?.street}, {clinicData.location?.cityOrDistrict},{" "}
+                  {clinicData.location?.stateOrProvince}, {clinicData.country}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Delivery Methods Section */}
+          <Card className="p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-[#FBAE24]/10 p-2 flex-shrink-0">
+                <Building2 className="h-5 w-5 text-[#FBAE24]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-3">Delivery Methods</h3>
+                <div className="flex flex-wrap gap-2">
+                  {deliveryMethods.length > 0 ? (
+                    deliveryMethods.map((method) => (
+                      <Badge key={method} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
+                        {method}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No delivery methods added yet</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
 
         {/* Supported Insurance Section */}
         <div className="mb-12">
@@ -247,7 +249,7 @@ export function ClinicProfile() {
         {/* Active Discount Codes */}
         <div className="mb-12">
           <h2 className="font-bold text-[18px] text-center sm:text-left sm:text-[20px] mb-4">Active Discount Codes</h2>
-          <div className="bg-green-50/50 rounded-2xl p-4 space-y-3 border border-green-100">
+          <div className="bg-green-50/50 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 border border-green-100">
             {/* HEALTH20 Code Card */}
             <Card className="p-4 bg-white border-green-200 shadow-sm">
               <div className="flex items-center justify-between">
