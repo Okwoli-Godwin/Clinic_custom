@@ -5,21 +5,7 @@ import { Card } from "./ui/card"
 import { Button } from "./ui/button"
 import { Label } from "./ui/label"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
-import {
-  CalendarIcon,
-  Clock,
-  CreditCard,
-  Wallet,
-  Users,
-  Banknote,
-  CheckCircle2,
-  Smartphone,
-  Home,
-  Users2,
-  Video,
-  MapPin,
-  Mail,
-} from "lucide-react"
+import { CalendarIcon, Clock, CreditCard, Wallet, Users, Banknote, CheckCircle2, Smartphone, Home, Users2, Video, MapPin, Mail, Phone, User } from 'lucide-react'
 import { Calendar } from "./ui/calendar"
 import { Alert, AlertDescription } from "./ui/alert"
 import { useClinicStore } from "../store/clinic-store"
@@ -60,8 +46,10 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
   const [discountCode, setDiscountCode] = useState("")
   const [discountAmount, setDiscountAmount] = useState(0)
 
-  const [address, setAddress] = useState("")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
 
   const { clinicData, availableSlots, slotsLoading, fetchAvailableSlots } = useClinicStore()
 
@@ -111,17 +99,20 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
   }
 
   const handleConfirmBooking = () => {
-    // Validate delivery method specific fields
+    if (!name.trim()) {
+      alert("Please enter your name")
+      return
+    }
+    if (!email.trim()) {
+      alert("Please enter your email")
+      return
+    }
+    if (!phone.trim()) {
+      alert("Please enter your phone number")
+      return
+    }
     if (selectedDeliveryMethod === "Home Service" && !address.trim()) {
       alert("Please enter your address for home service")
-      return
-    }
-    if (selectedDeliveryMethod === "In-Person" && !email.trim()) {
-      alert("Please enter your email for in-person booking")
-      return
-    }
-    if (selectedDeliveryMethod === "Online Session" && !email.trim()) {
-      alert("Please enter your email for online session booking")
       return
     }
     setIsBooked(true)
@@ -164,6 +155,24 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
               <strong>Delivery Method:</strong> {selectedDeliveryMethod}
             </p>
 
+            <div className="mt-4 pt-4 border-t">
+              <p className="flex items-center gap-2 mb-2">
+                <User className="h-4 w-4 text-[#FBAE24]" />
+                <strong>Name:</strong>
+              </p>
+              <p className="ml-6 text-sm">{name}</p>
+              <p className="flex items-center gap-2 mb-2 mt-2">
+                <Mail className="h-4 w-4 text-[#FBAE24]" />
+                <strong>Email:</strong>
+              </p>
+              <p className="ml-6 text-sm">{email}</p>
+              <p className="flex items-center gap-2 mb-2 mt-2">
+                <Phone className="h-4 w-4 text-[#FBAE24]" />
+                <strong>Phone:</strong>
+              </p>
+              <p className="ml-6 text-sm">{phone}</p>
+            </div>
+
             {selectedDeliveryMethod === "Home Service" && (
               <div className="mt-4 pt-4 border-t">
                 <p className="flex items-center gap-2 mb-2">
@@ -177,11 +186,6 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
             {selectedDeliveryMethod === "In-Person" && (
               <div className="mt-4 pt-4 border-t">
                 <p className="flex items-center gap-2 mb-2">
-                  <Mail className="h-4 w-4 text-[#FBAE24]" />
-                  <strong>Confirmation Email:</strong>
-                </p>
-                <p className="ml-6 text-sm mb-3">{email}</p>
-                <p className="flex items-center gap-2 mb-2">
                   <MapPin className="h-4 w-4 text-[#FBAE24]" />
                   <strong>Clinic Address:</strong>
                 </p>
@@ -191,11 +195,6 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
 
             {selectedDeliveryMethod === "Online Session" && (
               <div className="mt-4 pt-4 border-t">
-                <p className="flex items-center gap-2 mb-2">
-                  <Mail className="h-4 w-4 text-[#FBAE24]" />
-                  <strong>Confirmation Email:</strong>
-                </p>
-                <p className="ml-6 text-sm mb-3">{email}</p>
                 <p className="flex items-center gap-2 mb-2">
                   <Video className="h-4 w-4 text-[#FBAE24]" />
                   <strong>Session Link:</strong>
@@ -399,12 +398,51 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
             <Card className="p-6 shadow-md border-[#FBAE24]/50 bg-[#fff]">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="h-5 w-5 text-[#FBAE24]" />
-                <h3 className="font-semibold text-lg">Delivery Address</h3>
+                <h3 className="font-semibold text-lg">Delivery Details</h3>
               </div>
               <div className="space-y-3">
                 <div>
+                  <Label htmlFor="name-home" className="text-sm font-medium mb-2 block">
+                    Full Name
+                  </Label>
+                  <input
+                    id="name-home"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email-home" className="text-sm font-medium mb-2 block">
+                    Email Address
+                  </Label>
+                  <input
+                    id="email-home"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone-home" className="text-sm font-medium mb-2 block">
+                    Phone Number
+                  </Label>
+                  <input
+                    id="phone-home"
+                    type="tel"
+                    placeholder="+250 7XX XXX XXX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="address" className="text-sm font-medium mb-2 block">
-                    Enter your home address
+                    Delivery Address
                   </Label>
                   <textarea
                     id="address"
@@ -422,10 +460,23 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
           {selectedDeliveryMethod === "In-Person" && (
             <Card className="p-6 shadow-md border-[#FBAE24]/50 bg-[#fff]">
               <div className="flex items-center gap-2 mb-4">
-                <Mail className="h-5 w-5 text-[#FBAE24]" />
+                <Users2 className="h-5 w-5 text-[#FBAE24]" />
                 <h3 className="font-semibold text-lg">Contact Information</h3>
               </div>
               <div className="space-y-3">
+                <div>
+                  <Label htmlFor="name-inperson" className="text-sm font-medium mb-2 block">
+                    Full Name
+                  </Label>
+                  <input
+                    id="name-inperson"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
                 <div>
                   <Label htmlFor="email-inperson" className="text-sm font-medium mb-2 block">
                     Email Address
@@ -442,6 +493,19 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                     We'll send you the clinic address and appointment details to this email.
                   </p>
                 </div>
+                <div>
+                  <Label htmlFor="phone-inperson" className="text-sm font-medium mb-2 block">
+                    Phone Number
+                  </Label>
+                  <input
+                    id="phone-inperson"
+                    type="tel"
+                    placeholder="+250 7XX XXX XXX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
               </div>
             </Card>
           )}
@@ -449,10 +513,23 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
           {selectedDeliveryMethod === "Online Session" && (
             <Card className="p-6 shadow-md border-[#FBAE24]/50 bg-[#fff]">
               <div className="flex items-center gap-2 mb-4">
-                <Mail className="h-5 w-5 text-[#FBAE24]" />
+                <Video className="h-5 w-5 text-[#FBAE24]" />
                 <h3 className="font-semibold text-lg">Contact Information</h3>
               </div>
               <div className="space-y-3">
+                <div>
+                  <Label htmlFor="name-online" className="text-sm font-medium mb-2 block">
+                    Full Name
+                  </Label>
+                  <input
+                    id="name-online"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
                 <div>
                   <Label htmlFor="email-online" className="text-sm font-medium mb-2 block">
                     Email Address
@@ -468,6 +545,19 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
                   <p className="text-xs text-muted-foreground mt-2">
                     We'll send you the online session link to this email.
                   </p>
+                </div>
+                <div>
+                  <Label htmlFor="phone-online" className="text-sm font-medium mb-2 block">
+                    Phone Number
+                  </Label>
+                  <input
+                    id="phone-online"
+                    type="tel"
+                    placeholder="+250 7XX XXX XXX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
                 </div>
               </div>
             </Card>
