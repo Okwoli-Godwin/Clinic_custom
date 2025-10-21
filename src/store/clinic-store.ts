@@ -37,6 +37,17 @@ interface DiscountCode {
   description?: string
 }
 
+interface TimeRange {
+  openHour: number
+  closeHour: number
+}
+
+interface AvailabilityData {
+  day: string
+  isClosed: boolean
+  timeRanges: TimeRange[]
+}
+
 interface ClinicData {
   clinicId: number
   clinicName: string
@@ -71,8 +82,25 @@ interface ClinicStore {
     code: string,
   ) => Promise<{ success: boolean; discount?: number; message?: string }>
   fetchClinicData: (username: string) => Promise<void>
-  fetchAvailableSlots: (username: string, date: string) => Promise<void>
+  fetchAvailabilitySlots: (clinicId: number, date: string) => Promise<void>
   fetchDiscountCodes: (clinicId: number) => Promise<void>
+}
+
+const getDayOfWeek = (date: Date): string => {
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+  return days[date.getDay()]
+}
+
+const generateTimeSlots = (timeRanges: TimeRange[]): string[] => {
+  const slots: string[] = []
+
+  timeRanges.forEach((range) => {
+    for (let hour = range.openHour; hour < range.closeHour; hour++) {
+      slots.push(`${String(hour).padStart(2, "0")}:00`)
+    }
+  })
+
+  return slots
 }
 
 export const useClinicStore = create<ClinicStore>((set) => ({
@@ -111,23 +139,43 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     }
   },
 
-  // ✅ Fetch available slots for a given username and date
-  fetchAvailableSlots: async (username: string, date: string) => {
+  fetchAvailabilitySlots: async (clinicId: number, date: string) => {
     set({ slotsLoading: true, slotsError: null })
     try {
       const response = await fetch(
-        `https://clinic-backend.mylifeline.world/api/v1/clinic/public/${username}/slots?date=${date}`,
+        `https://clinic-backend.mylifeline.world/api/v1/availability/${clinicId}/slots?date=${date}`,
       )
 
       if (!response.ok) {
-        throw new Error("Failed to fetch available slots")
+        throw new Error("Failed to fetch availability slots")
       }
 
       const result = await response.json()
-      if (result.success) {
-        set({ availableSlots: result.data.slots, slotsLoading: false })
+      if (result.success && result.data) {
+        const availabilityData: AvailabilityData = result.data
+
+        const selectedDate = new Date(date)
+        const selectedDayOfWeek = getDayOfWeek(selectedDate)
+        const returnedDay = availabilityData.day.toLowerCase()
+
+        console.log("[v0] Selected date:", date, "Day:", selectedDayOfWeek, "Returned day:", returnedDay)
+
+        if (selectedDayOfWeek !== returnedDay) {
+          console.log("[v0] Day mismatch - showing no available slots")
+          set({ availableSlots: [], slotsLoading: false, slotsError: "No availability for this day" })
+          return
+        }
+
+        if (availabilityData.isClosed) {
+          set({ availableSlots: [], slotsLoading: false, slotsError: "Clinic is closed on this day" })
+        } else if (!availabilityData.timeRanges || availabilityData.timeRanges.length === 0) {
+          set({ availableSlots: [], slotsLoading: false, slotsError: "No available slots for this day" })
+        } else {
+          const slots = generateTimeSlots(availabilityData.timeRanges)
+          set({ availableSlots: slots, slotsLoading: false })
+        }
       } else {
-        throw new Error(result.message || "Failed to fetch available slots")
+        throw new Error(result.message || "Failed to fetch availability slots")
       }
     } catch (error) {
       set({ slotsError: (error as Error).message, slotsLoading: false, availableSlots: [] })

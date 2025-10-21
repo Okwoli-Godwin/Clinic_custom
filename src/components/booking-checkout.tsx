@@ -38,6 +38,7 @@ interface BookingCheckoutProps {
     description: string
   }
   quantity: number
+  clinicId: number
   onBack: () => void
 }
 
@@ -53,7 +54,7 @@ const DELIVERY_METHOD_ICONS = {
   "Online Session": Video,
 }
 
-export function BookingCheckout({ appointment, quantity, onBack }: BookingCheckoutProps) {
+export function BookingCheckout({ appointment, quantity, clinicId, onBack }: BookingCheckoutProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("")
@@ -70,7 +71,10 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
 
-  const { clinicData, availableSlots, slotsLoading, fetchAvailableSlots, applyDiscountCode } = useClinicStore()
+  const { clinicData, availableSlots, slotsLoading, fetchAvailabilitySlots, applyDiscountCode, slotsError } =
+    useClinicStore()
+
+  const effectiveClinicId = clinicId || clinicData?.clinicId
 
   const pricePerPerson = appointment.price
   const subtotal = pricePerPerson * quantity
@@ -122,12 +126,16 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
   }
 
   useEffect(() => {
-    if (selectedDate && clinicData?.username) {
-      const formattedDate = selectedDate.toISOString().split("T")[0]
-      fetchAvailableSlots(clinicData.username, formattedDate)
+    if (selectedDate && effectiveClinicId) {
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, "0")
+      const day = String(selectedDate.getDate()).padStart(2, "0")
+      const formattedDate = `${year}-${month}-${day}`
+
+      fetchAvailabilitySlots(effectiveClinicId, formattedDate)
       setSelectedTime("")
     }
-  }, [selectedDate, clinicData?.username, fetchAvailableSlots])
+  }, [selectedDate, effectiveClinicId, fetchAvailabilitySlots])
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(":")
@@ -384,7 +392,7 @@ export function BookingCheckout({ appointment, quantity, onBack }: BookingChecko
               <p className="text-sm text-muted-foreground text-center py-8">Loading available slots...</p>
             ) : availableSlots.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No available slots for this date. Please select another date.
+                {slotsError || "No available slots for this date. Please select another date."}
               </p>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
