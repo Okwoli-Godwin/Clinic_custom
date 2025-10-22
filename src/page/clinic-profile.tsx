@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Badge } from "../components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
+// import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { MapPin, Building2, MessageSquare, Copy, Info } from "lucide-react"
 import { Card } from "../components/ui/card"
 import { ReviewsSection } from "./reviews-section"
@@ -25,6 +25,19 @@ const DELIVERY_METHOD_NAMES = {
   0: "Home Service",
   1: "In-Person",
   2: "Online Session",
+}
+
+const formatDate = (dateString: string | Date): string => {
+  try {
+    const date = typeof dateString === "string" ? new Date(dateString) : dateString
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  } catch {
+    return dateString?.toString() || "Invalid date"
+  }
 }
 
 export function ClinicProfile() {
@@ -106,12 +119,8 @@ export function ClinicProfile() {
       <div className="w-full max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
-            <AvatarImage src={clinicData.avatar || "/placeholder.svg"} alt={clinicData.clinicName} />
-            <AvatarFallback className="bg-[#FBAE24] text-2xl text-white sm:text-3xl">
-              {clinicData.clinicName?.substring(0, 2).toUpperCase() || "CL"}
-            </AvatarFallback>
-          </Avatar>
+          <img src={clinicData.avatar} alt={clinicData.clinicName} className="h-24 w-24 sm:h-32 sm:w-32 object-cover rounded-[100px]" />
+            
 
           <h1 className="mt-4 font-bold text-2xl text-foreground sm:text-3xl">{capitalize(clinicData.clinicName)}</h1>
 
@@ -271,10 +280,10 @@ export function ClinicProfile() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold text-foreground">{discountCode.code}</span>
                         <Badge className="bg-green-500 text-white text-xs hover:bg-green-500">
-                          {discountCode.discount}% off
+                          {discountCode.percentage}% off
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">Valid until {discountCode.validUntil}</p>
+                      <p className="text-xs text-muted-foreground">Valid until {formatDate(discountCode.validUntil)}</p>
                       {discountCode.description && (
                         <p className="text-xs text-muted-foreground mt-1">{discountCode.description}</p>
                       )}

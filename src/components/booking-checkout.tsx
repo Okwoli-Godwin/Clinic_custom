@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -21,10 +22,12 @@ import {
   Mail,
   Phone,
   User,
+  Download,
 } from "lucide-react"
 import { Calendar } from "./ui/calendar"
 import { Alert, AlertDescription } from "./ui/alert"
 import { useClinicStore } from "../store/clinic-store"
+import { PaymentDetailsModal } from "./payment-details-modal"
 import img from "../assets/playstore.png"
 import img2 from "../assets/apple.png"
 
@@ -61,18 +64,32 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
   const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState("")
   const [isBooked, setIsBooked] = useState(false)
   const [discountCode, setDiscountCode] = useState("")
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState("")
   const [discountAmount, setDiscountAmount] = useState(0)
   const [discountError, setDiscountError] = useState("")
   const [discountLoading, setDiscountLoading] = useState(false)
   const [discountSuccess, setDiscountSuccess] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState("")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [checkoutResponse, setCheckoutResponse] = useState<any>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
+  const [cityOrDistrict, setCityOrDistrict] = useState("")
 
-  const { clinicData, availableSlots, slotsLoading, fetchAvailabilitySlots, applyDiscountCode, slotsError } =
-    useClinicStore()
+  const {
+    clinicData,
+    availableSlots,
+    slotsLoading,
+    fetchAvailabilitySlots,
+    applyDiscountCode,
+    slotsError,
+    createCheckout,
+  } = useClinicStore()
 
   const effectiveClinicId = clinicId || clinicData?.clinicId
 
@@ -90,7 +107,7 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
 
   const availableDeliveryMethods = Array.isArray(clinicData?.deliveryMethods)
     ? clinicData.deliveryMethods.map(
-        (method) => DELIVERY_METHOD_NAMES[Number(method) as keyof typeof DELIVERY_METHOD_NAMES] || method,
+        (method: any) => DELIVERY_METHOD_NAMES[Number(method) as keyof typeof DELIVERY_METHOD_NAMES] || method,
       )
     : []
 
@@ -109,17 +126,19 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
     setDiscountError("")
     setDiscountSuccess(false)
 
-    const result = await applyDiscountCode(clinicData.clinicId, discountCode)
+    const result = await applyDiscountCode(clinicData.clinicId, discountCode, subtotal)
 
     if (result.success && result.discount) {
       const discountValue = (subtotal * result.discount) / 100
       setDiscountAmount(discountValue)
+      setAppliedDiscountCode(discountCode)
       setDiscountSuccess(true)
       setDiscountCode("")
       setTimeout(() => setDiscountSuccess(false), 3000)
     } else {
       setDiscountError(result.message || "Invalid discount code")
       setDiscountAmount(0)
+      setAppliedDiscountCode("")
     }
 
     setDiscountLoading(false)
@@ -145,7 +164,7 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
     return `${displayHour}:${minutes} ${ampm}`
   }
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     if (!name.trim()) {
       alert("Please enter your name")
       return
@@ -162,8 +181,81 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
       alert("Please enter your address for home service")
       return
     }
-    setIsBooked(true)
+    if (selectedDeliveryMethod === "Home Service" && !cityOrDistrict.trim()) {
+      alert("Please enter your city or district for home service")
+      return
+    }
+
+    setCheckoutLoading(true)
+    setCheckoutError("")
+
+    // Map delivery method name to number
+    const deliveryMethodMap: { [key: string]: number } = {
+      "Home Service": 0,
+      "In-Person": 1,
+      "Online Session": 2,
+    }
+    const deliveryMethodNumber = deliveryMethodMap[selectedDeliveryMethod] ?? 1
+
+    let formattedPhone = phone.replace(/\D/g, "") // Remove all non-digits
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = formattedPhone.substring(1) // Remove leading 0
+    }
+
+    // Format date as YYYY-MM-DD
+    const year = selectedDate!.getFullYear()
+    const month = String(selectedDate!.getMonth() + 1).padStart(2, "0")
+    const day = String(selectedDate!.getDate()).padStart(2, "0")
+    const formattedDate = `${year}-${month}-${day}`
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const checkoutData: any = {
+      clinicId: effectiveClinicId,
+      testNo: appointment.testNo,
+      paymentMethod: "pawa_pay",
+      phoneNumber: formattedPhone,
+      fullName: name,
+      email: email,
+      deliveryMethod: deliveryMethodNumber,
+      date: formattedDate,
+      time: selectedTime,
+    }
+
+    // Add delivery address if home service
+    if (deliveryMethodNumber === 0) {
+      checkoutData.deliveryAddress = {
+        address: address,
+        cityOrDistrict: cityOrDistrict,
+        phoneNo: phone,
+      }
+    }
+
+    if (appliedDiscountCode) {
+      checkoutData.discountCode = appliedDiscountCode
+    }
+
+    console.log("[v0] Checkout data:", checkoutData)
+
+    const result = await createCheckout(checkoutData)
+
+    if (result.success) {
+      console.log("[v0] Checkout successful:", result.data)
+      setCheckoutResponse(result.data)
+      setIsBooked(true)
+    } else {
+      setCheckoutError(result.message || "Failed to complete checkout")
+      console.log("[v0] Checkout error:", result.message)
+    }
+
+    setCheckoutLoading(false)
   }
+
+  useEffect(() => {
+    if (isBooked) {
+      // Clear any existing error
+      setCheckoutError("")
+    }
+  }, [isBooked])
 
   const getClinicAddress = () => {
     return clinicData?.address || "123 Clinic Street, Kigali, Rwanda"
@@ -175,92 +267,224 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
 
   if (isBooked) {
     return (
-      <div className="mb-8">
-        <Card className="p-8 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 className="h-10 w-10 text-green-600" />
-          </div>
-          <h2 className="font-serif text-2xl font-bold mb-2">Booking Confirmed!</h2>
-          <p className="text-muted-foreground mb-6">
-            Your appointment has been successfully booked. You will receive a confirmation email shortly.
-          </p>
-          <div className="space-y-2 text-left bg-muted/50 p-4 rounded-lg mb-6">
-            <p>
-              <strong>Appointment:</strong> {appointment.testName}
-            </p>
-            <p>
-              <strong>Date:</strong>{" "}
-              {selectedDate?.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-            </p>
-            <p>
-              <strong>Time:</strong> {selectedTime}
-            </p>
-            <p>
-              <strong>Number of People:</strong> {quantity}
-            </p>
-            <p>
-              <strong>Delivery Method:</strong> {selectedDeliveryMethod}
-            </p>
+      <>
+        <div className="mb-8">
+          <Card className="p-8 text-center shadow-lg">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Checkout Successful</h2>
+            {/* <p className="text-muted-foreground mb-6">
+              Your appointment has been successfully booked. You will receive a confirmation email shortly.
+            </p> */}
 
-            <div className="mt-4 pt-4 border-t">
-              <p className="flex items-center gap-2 mb-2">
-                <User className="h-4 w-4 text-[#FBAE24]" />
-                <strong>Name:</strong>
-              </p>
-              <p className="ml-6 text-sm">{name}</p>
-              <p className="flex items-center gap-2 mb-2 mt-2">
-                <Mail className="h-4 w-4 text-[#FBAE24]" />
-                <strong>Email:</strong>
-              </p>
-              <p className="ml-6 text-sm">{email}</p>
-              <p className="flex items-center gap-2 mb-2 mt-2">
-                <Phone className="h-4 w-4 text-[#FBAE24]" />
-                <strong>Phone:</strong>
-              </p>
-              <p className="ml-6 text-sm">{phone}</p>
+            <div className="space-y-2 text-left bg-muted/50 p-4 rounded-lg mb-6">
+              {/* Payment Response Section */}
+              {checkoutResponse && (
+                <>
+                  <div className="mb-4 pb-4 border-b">
+                    <h3 className="font-semibold text-lg text-[#FBAE24] mb-3">Payment Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Transaction ID:</strong>{" "}
+                        <span className="font-mono text-xs bg-background p-1 rounded">
+                          {checkoutResponse.transactionId}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Status:</strong> <span className="text-green-600 font-semibold">Payment Initiated</span>
+                      </p>
+                      <p>
+                        <strong>Phone Number:</strong> {checkoutResponse.phoneNumber}
+                      </p>
+                      <p>
+                        <strong>Email:</strong> {checkoutResponse.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Amount Section */}
+                  <div className="mb-4 pb-4 border-b">
+                    <h3 className="font-semibold text-lg text-[#FBAE24] mb-3">Amount Details</h3>
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Original Amount:</strong> {checkoutResponse.amount?.toLocaleString()} RWF
+                      </p>
+                      {checkoutResponse.discount && (
+                        <>
+                          <p>
+                            <strong>Discount Code:</strong>{" "}
+                            <span className="bg-blue-100 px-2 py-1 rounded font-semibold">
+                              {checkoutResponse.discount.code}
+                            </span>
+                          </p>
+                          <p>
+                            <strong>Discount Percentage:</strong> {checkoutResponse.discount.percentage}%
+                          </p>
+                          <p>
+                            <strong>Discount Amount:</strong> -
+                            {checkoutResponse.discount.discountAmount?.toLocaleString()} RWF
+                          </p>
+                          <p>
+                            <strong>Discount Expires:</strong>{" "}
+                            {new Date(checkoutResponse.discount.expiresAt).toLocaleDateString()}
+                          </p>
+                        </>
+                      )}
+                      <p className="border-t pt-2 mt-2">
+                        <strong className="text-lg">Final Amount:</strong>{" "}
+                        <span className="text-lg font-bold text-[#FBAE24]">
+                          {checkoutResponse.finalAmount?.toLocaleString()} RWF
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Delivery Section */}
+                  <div className="mb-4 pb-4 border-b">
+                    <h3 className="font-semibold text-lg text-[#FBAE24] mb-3">Delivery Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Delivery Method:</strong>{" "}
+                        {DELIVERY_METHOD_NAMES[checkoutResponse.deliveryMethod as keyof typeof DELIVERY_METHOD_NAMES] ||
+                          checkoutResponse.deliveryMethod}
+                      </p>
+                      {checkoutResponse.deliveryAddress && (
+                        <>
+                          <p>
+                            <strong>Address:</strong> {checkoutResponse.deliveryAddress.address}
+                          </p>
+                          <p>
+                            <strong>City/District:</strong> {checkoutResponse.deliveryAddress.cityOrDistrict}
+                          </p>
+                          <p>
+                            <strong>Phone:</strong> {checkoutResponse.deliveryAddress.phoneNo}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Scheduled Date/Time */}
+                  {/* {checkoutResponse.scheduledAt && (
+                    <div className="mb-4 pb-4 border-b">
+                      <h3 className="font-semibold text-lg text-[#FBAE24] mb-3">Scheduled Appointment</h3>
+                      <p className="text-sm">
+                        <strong>Date & Time:</strong>{" "}
+                        {new Date(checkoutResponse.scheduledAt).toLocaleString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  )} */}
+                </>
+              )}
+
+              {/* Original Booking Details */}
+              <div className="mt-4 pt-4 border-t">
+                <h3 className="font-semibold text-lg text-[#FBAE24] mb-3">Appointment Details</h3>
+                <p>
+                  <strong>Appointment:</strong> {appointment.testName}
+                </p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {selectedDate?.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                </p>
+                <p>
+                  <strong>Time:</strong> {formatTime(selectedTime)}
+                </p>
+                <p>
+                  <strong>Number of People:</strong> {quantity}
+                </p>
+                <p>
+                  <strong>Delivery Method:</strong> {selectedDeliveryMethod}
+                </p>
+              </div>
+
+              <div className="mt-4 pt-4 border-t">
+                <p className="flex items-center gap-2 mb-2">
+                  <User className="h-4 w-4 text-[#FBAE24]" />
+                  <strong>Name:</strong>
+                </p>
+                <p className="ml-6 text-sm">{name}</p>
+                <p className="flex items-center gap-2 mb-2 mt-2">
+                  <Mail className="h-4 w-4 text-[#FBAE24]" />
+                  <strong>Email:</strong>
+                </p>
+                <p className="ml-6 text-sm">{email}</p>
+                <p className="flex items-center gap-2 mb-2 mt-2">
+                  <Phone className="h-4 w-4 text-[#FBAE24]" />
+                  <strong>Phone:</strong>
+                </p>
+                <p className="ml-6 text-sm">{phone}</p>
+              </div>
+
+              {selectedDeliveryMethod === "Home Service" && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-[#FBAE24]" />
+                    <strong>Delivery Address:</strong>
+                  </p>
+                  <p className="ml-6 text-sm">{address}</p>
+                </div>
+              )}
+
+              {selectedDeliveryMethod === "In-Person" && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-[#FBAE24]" />
+                    <strong>Clinic Address:</strong>
+                  </p>
+                  <p className="ml-6 text-sm bg-blue-50 p-3 rounded border border-blue-200">{getClinicAddress()}</p>
+                </div>
+              )}
+
+              {selectedDeliveryMethod === "Online Session" && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="flex items-center gap-2 mb-2">
+                    <Video className="h-4 w-4 text-[#FBAE24]" />
+                    <strong>Session Link:</strong>
+                  </p>
+                  <p className="ml-6 text-sm bg-purple-50 p-3 rounded border border-purple-200 break-all">
+                    {getOnlineSessionLink()}
+                  </p>
+                </div>
+              )}
+
+              {/* <p className="mt-4 pt-4 border-t">
+                <strong>Total Amount:</strong> {totalPrice.toLocaleString()} {appointment.currencySymbol}
+              </p> */}
             </div>
 
-            {selectedDeliveryMethod === "Home Service" && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-[#FBAE24]" />
-                  <strong>Delivery Address:</strong>
-                </p>
-                <p className="ml-6 text-sm">{address}</p>
-              </div>
-            )}
+            <div className="flex gap-3">
+              <Button onClick={onBack} className="flex-1 bg-[#FBAE24] hover:bg-[#FBAE24]/90">
+                Back to Clinic
+              </Button>
+              <Button onClick={() => setShowPaymentModal(true)} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                <Download className="h-4 w-4 mr-2" />
+                View Receipt
+              </Button>
+            </div>
+          </Card>
+        </div>
 
-            {selectedDeliveryMethod === "In-Person" && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-[#FBAE24]" />
-                  <strong>Clinic Address:</strong>
-                </p>
-                <p className="ml-6 text-sm bg-blue-50 p-3 rounded border border-blue-200">{getClinicAddress()}</p>
-              </div>
-            )}
-
-            {selectedDeliveryMethod === "Online Session" && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="flex items-center gap-2 mb-2">
-                  <Video className="h-4 w-4 text-[#FBAE24]" />
-                  <strong>Session Link:</strong>
-                </p>
-                <p className="ml-6 text-sm bg-purple-50 p-3 rounded border border-purple-200 break-all">
-                  {getOnlineSessionLink()}
-                </p>
-              </div>
-            )}
-
-            <p className="mt-4 pt-4 border-t">
-              <strong>Total Amount:</strong> {totalPrice.toLocaleString()} {appointment.currencySymbol}
-            </p>
-          </div>
-          <Button onClick={onBack} className="w-full bg-[#FBAE24] hover:bg-[#FBAE24]/90">
-            Back to Clinic
-          </Button>
-        </Card>
-      </div>
+        {checkoutResponse && (
+          <PaymentDetailsModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            paymentData={checkoutResponse}
+            appointmentDetails={{
+              testName: appointment.testName,
+              currencySymbol: appointment.currencySymbol,
+            }}
+          />
+        )}
+      </>
     )
   }
 
@@ -496,6 +720,19 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
                   />
                 </div>
                 <div>
+                  <Label htmlFor="city-home" className="text-sm font-medium mb-2 block">
+                    City or District
+                  </Label>
+                  <input
+                    id="city-home"
+                    type="text"
+                    placeholder="Gasabo"
+                    value={cityOrDistrict}
+                    onChange={(e) => setCityOrDistrict(e.target.value)}
+                    className="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FBAE24]"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="address" className="text-sm font-medium mb-2 block">
                     Delivery Address
                   </Label>
@@ -691,13 +928,19 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
             </RadioGroup>
           </Card>
 
+          {checkoutError && (
+            <Alert className="border-red-500 bg-red-50">
+              <AlertDescription className="text-red-700">{checkoutError}</AlertDescription>
+            </Alert>
+          )}
+
           <Button
             size="lg"
             className="w-full bg-[#FBAE24] text-white hover:bg-[#FBAE24]/90 shadow-lg"
             onClick={handleConfirmBooking}
-            disabled={!selectedDate || !selectedTime || !paymentMethod || !selectedDeliveryMethod}
+            disabled={!selectedDate || !selectedTime || !paymentMethod || !selectedDeliveryMethod || checkoutLoading}
           >
-            Confirm Booking
+            {checkoutLoading ? "Processing..." : "Confirm Booking"}
           </Button>
         </div>
       </div>

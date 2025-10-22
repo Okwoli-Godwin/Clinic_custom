@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { create } from "zustand"
 
 interface Location {
@@ -31,6 +32,7 @@ interface Test {
 }
 
 interface DiscountCode {
+  percentage: ReactNode
   code: string
   discount: number
   validUntil: string
@@ -80,10 +82,31 @@ interface ClinicStore {
   applyDiscountCode: (
     clinicId: number,
     code: string,
+    amount: number,
   ) => Promise<{ success: boolean; discount?: number; message?: string }>
   fetchClinicData: (username: string) => Promise<void>
   fetchAvailabilitySlots: (clinicId: number, date: string) => Promise<void>
   fetchDiscountCodes: (clinicId: number) => Promise<void>
+  createCheckout: (checkoutData: {
+    clinicId: number
+    testNo: number
+    paymentMethod: string
+    phoneNumber: string
+    fullName: string
+    email: string
+    deliveryMethod: number
+    deliveryAddress?: {
+      address: string
+      cityOrDistrict: string
+      phoneNo: string
+    }
+    date: string
+    time: string
+    discountCode?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) => Promise<{ success: boolean; message?: string; data?: any }>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getPaymentDetails: (transactionId: string) => Promise<{ success: boolean; data?: any; message?: string }>
 }
 
 const getDayOfWeek = (date: Date): string => {
@@ -206,9 +229,9 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     }
   },
 
-  applyDiscountCode: async (clinicId: number, code: string) => {
+  applyDiscountCode: async (clinicId: number, code: string, amount: number) => {
     try {
-      const response = await fetch("https://clinic-backend.mylifeline.world/api/v1/discount/patient/apply", {
+      const response = await fetch("https://clinic-backend.mylifeline.world/api/v1/discount/public/apply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -216,6 +239,7 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         body: JSON.stringify({
           clinicId: clinicId.toString(),
           code: code.toUpperCase(),
+          amount: amount,
         }),
       })
 
@@ -227,7 +251,7 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       if (result.success) {
         return {
           success: true,
-          discount: result.data?.discount || 0,
+          discount: result.data?.discountAmount || 0,
           message: result.message || "Discount applied successfully",
         }
       } else {
@@ -240,6 +264,85 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       return {
         success: false,
         message: (error as Error).message || "Failed to apply discount code",
+      }
+    }
+  },
+
+  createCheckout: async (checkoutData) => {
+    try {
+      console.log("[v0] Checkout data being sent:", JSON.stringify(checkoutData, null, 2))
+
+      const response = await fetch("https://clinic-backend.mylifeline.world/api/v1/orders/checkout/public", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(checkoutData),
+      })
+
+      console.log("[v0] Checkout response status:", response.status, response.statusText)
+
+      const result = await response.json()
+      console.log("[v0] Checkout response body:", JSON.stringify(result, null, 2))
+
+      if (!response.ok) {
+        console.log("[v0] Checkout error details:", result)
+        throw new Error(result.message || "Failed to create checkout")
+      }
+
+      if (result.success) {
+        console.log("[v0] Checkout successful:", result.data)
+        return {
+          success: true,
+          message: result.message || "Checkout successful",
+          data: result.data,
+        }
+      } else {
+        console.log("[v0] Checkout failed:", result.message)
+        return {
+          success: false,
+          message: result.message || "Checkout failed",
+        }
+      }
+    } catch (error) {
+      console.log("[v0] Checkout exception:", error)
+      return {
+        success: false,
+        message: (error as Error).message || "Failed to create checkout",
+      }
+    }
+  },
+
+  getPaymentDetails: async (transactionId: string) => {
+    try {
+      console.log("[v0] Fetching payment details for transaction:", transactionId)
+
+      const response = await fetch(
+        `https://clinic-backend.mylifeline.world/api/v1/payment/pawapay/details/${transactionId}`,
+      )
+
+      console.log("[v0] Payment details response status:", response.status, response.statusText)
+
+      const result = await response.json()
+      console.log("[v0] Payment details response:", JSON.stringify(result, null, 2))
+
+      if (result.success) {
+        return {
+          success: true,
+          data: result.data,
+          message: result.message,
+        }
+      } else {
+        return {
+          success: false,
+          message: result.message || "Failed to fetch payment details",
+        }
+      }
+    } catch (error) {
+      console.log("[v0] Payment details error:", error)
+      return {
+        success: false,
+        message: (error as Error).message || "Failed to fetch payment details",
       }
     }
   },
