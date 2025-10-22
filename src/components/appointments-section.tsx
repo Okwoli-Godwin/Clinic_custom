@@ -44,7 +44,7 @@ export function AppointmentsSection({ tests }: AppointmentsSectionProps) {
 
   if (selectedAppointment && bookingQuantity !== null) {
     return (
-      <BookingCheckout appointment={selectedAppointment} quantity={bookingQuantity} onBack={handleBackFromCheckout} />
+      <BookingCheckout appointment={selectedAppointment} quantity={bookingQuantity} onBack={handleBackFromCheckout} clinicId={0} />
     )
   }
 

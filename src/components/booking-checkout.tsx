@@ -71,7 +71,6 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
   const [discountSuccess, setDiscountSuccess] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState("")
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [checkoutResponse, setCheckoutResponse] = useState<any>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
@@ -208,7 +207,6 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
     const day = String(selectedDate!.getDate()).padStart(2, "0")
     const formattedDate = `${year}-${month}-${day}`
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkoutData: any = {
       clinicId: effectiveClinicId,
       testNo: appointment.testNo,
