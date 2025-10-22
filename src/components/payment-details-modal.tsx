@@ -109,6 +109,7 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
     if (isOpen && paymentData.transactionId) {
       fetchPaymentDetails()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, paymentData.transactionId])
 
   const fetchPaymentDetails = async () => {
