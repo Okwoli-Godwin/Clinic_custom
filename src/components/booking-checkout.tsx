@@ -259,9 +259,9 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
     return clinicData?.address || "123 Clinic Street, Kigali, Rwanda"
   }
 
-  const getOnlineSessionLink = () => {
-    return "https://meet.clinic.com/session/" + Math.random().toString(36).substr(2, 9)
-  }
+  // const getOnlineSessionLink = () => {
+  //   return "https://meet.clinic.com/session/" + Math.random().toString(36).substr(2, 9)
+  // }
 
   if (isBooked) {
     return (
@@ -442,7 +442,7 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
                 </div>
               )}
 
-              {selectedDeliveryMethod === "Online Session" && (
+              {/* {selectedDeliveryMethod === "Online Session" && (
                 <div className="mt-4 pt-4 border-t">
                   <p className="flex items-center gap-2 mb-2">
                     <Video className="h-4 w-4 text-[#FBAE24]" />
@@ -452,7 +452,7 @@ export function BookingCheckout({ appointment, quantity, clinicId, onBack }: Boo
                     {getOnlineSessionLink()}
                   </p>
                 </div>
-              )}
+              )} */}
 
               {/* <p className="mt-4 pt-4 border-t">
                 <strong>Total Amount:</strong> {totalPrice.toLocaleString()} {appointment.currencySymbol}

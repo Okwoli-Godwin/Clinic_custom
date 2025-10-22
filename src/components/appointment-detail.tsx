@@ -1,8 +1,6 @@
 "use client"
-
-import { useState } from "react"
 import { Button } from "./ui/button"
-import { ArrowLeft, Minus, Plus, Clock, FileText, ClipboardList, Beaker, Home, Heart, Share2 } from "lucide-react"
+import { ArrowLeft, Clock, FileText, ClipboardList, Beaker, Home, Heart } from "lucide-react"
 
 interface AppointmentDetailProps {
   appointment: {
@@ -24,8 +22,6 @@ interface AppointmentDetailProps {
 }
 
 export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDetailProps) {
-  const [quantity, setQuantity] = useState(1)
-
   const capitalize = (str: string) => {
     if (!str) return ""
     return str
@@ -34,21 +30,8 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
       .join(" ")
   }
 
-  const increaseQuantity = () => setQuantity((prev) => prev + 1)
-  const decreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1))
-
   const handleBookAppointment = () => {
-    onBook(quantity)
-  }
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: appointment.testName,
-        text: `Check out ${appointment.testName} at ${appointment.price} ${appointment.currencySymbol}`,
-        url: window.location.href,
-      })
-    }
+    onBook(1)
   }
 
   return (
@@ -75,36 +58,9 @@ export function AppointmentDetail({ appointment, onBack, onBook }: AppointmentDe
           </div>
 
           <div className="order-2 lg:order-2">
-            <div className="flex items-start justify-between mb-6">
-              <h1 className="text-[20px] sm:text-1xl font-bold">{capitalize(appointment.testName)}</h1>
-              <Button variant="ghost" size="icon" onClick={handleShare} className="shrink-0">
-                <Share2 className="h-6 w-6" />
-              </Button>
-            </div>
+            <h1 className="text-[20px] sm:text-1xl font-bold mb-8">{capitalize(appointment.testName)}</h1>
 
             <div className="flex items-center justify-between mb-8 pb-6 border-b">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Individuals</p>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={decreaseQuantity}
-                    className="h-10 w-10 rounded-full bg-transparent"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={increaseQuantity}
-                    className="h-10 w-10 rounded-full bg-transparent"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
               <div className="text-right">
                 <p className="text-1xl font-bold">
                   {appointment.price.toLocaleString()} {appointment.currencySymbol}

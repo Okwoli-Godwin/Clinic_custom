@@ -192,7 +192,7 @@ export function ClinicProfile() {
                 <h3 className="font-semibold text-foreground mb-1">Address</h3>
                 <p className="text-sm text-muted-foreground">
                   {clinicData.location?.street}, {clinicData.location?.cityOrDistrict},{" "}
-                  {clinicData.location?.stateOrProvince}, {clinicData.country}
+                  {clinicData.location?.stateOrProvince}
                 </p>
               </div>
             </div>

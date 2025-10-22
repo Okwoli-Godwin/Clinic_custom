@@ -39,11 +39,11 @@ interface PaymentDetailsModalProps {
   }
 }
 
-// const DELIVERY_METHOD_NAMES = {
-//   0: "Home Service",
-//   1: "In-Person",
-//   2: "Online Session",
-// }
+const DELIVERY_METHOD_NAMES = {
+  0: "Home Service",
+  1: "In-Person",
+  2: "Online Session",
+}
 
 const formatCorrespondent = (correspondent: string): string => {
   const correspondentMap: { [key: string]: string } = {
@@ -103,7 +103,7 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
   const [detailsError, setDetailsError] = useState("")
   const [exportError, setExportError] = useState("")
   const contentRef = useRef<HTMLDivElement>(null)
-  const { getPaymentDetails } = useClinicStore()
+  const { getPaymentDetails, clinicData } = useClinicStore()
 
   useEffect(() => {
     if (isOpen && paymentData.transactionId) {
@@ -230,7 +230,7 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-[90%] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-full max-w-full sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl sm:text-2xl">Payment Receipt</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
@@ -272,13 +272,33 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
               fontFamily: "system-ui, -apple-system, sans-serif",
             }}
           >
-            {/* Header */}
-            <div className="text-center border-b pb-3 sm:pb-4" style={{ borderColor: "#e5e7eb" }}>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style={{ color: "#FBAE24" }}>
+            {/* Clinic logo and name header */}
+            <div className="text-center border-b pb-4 sm:pb-6" style={{ borderColor: "#e5e7eb" }}>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <img
+                  src={clinicData?.avatar || "/placeholder-logo.svg"}
+                  alt={clinicData?.clinicName || "Clinic Logo"}
+                  className="h-10 sm:h-12 w-auto rounded-full"
+                  style={{ maxHeight: "60px", objectFit: "cover" }}
+                />
+                <div className="text-left">
+                  <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: "#FBAE24" }}>
+                    {clinicData?.clinicName || "Lifeline Clinics"}
+                  </h1>
+                  {/* <p className="text-xs sm:text-sm" style={{ color: "#6b7280" }}>
+                    Professional Healthcare Services
+                  </p> */}
+                </div>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold mt-3 sm:mt-4" style={{ color: "#000000" }}>
                 Payment Receipt
               </h2>
+            </div>
+
+            {/* Header */}
+            <div className="text-center border-b pb-3 sm:pb-4" style={{ borderColor: "#e5e7eb" }}>
               <p className="text-xs sm:text-sm" style={{ color: "#6b7280" }}>
-                Lifeline Clinics
+                Receipt Number: {paymentData.transactionId.substring(0, 8).toUpperCase()}
               </p>
             </div>
 
@@ -490,7 +510,7 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
             </div>
 
             {/* Delivery Information */}
-            {/* <div style={{ borderTopColor: "#e5e7eb", borderTopWidth: "1px", paddingTop: "12px" }}>
+            <div style={{ borderTopColor: "#e5e7eb", borderTopWidth: "1px", paddingTop: "12px" }}>
               <h3 className="font-semibold text-base sm:text-lg mb-3" style={{ color: "#FBAE24" }}>
                 Delivery Information
               </h3>
@@ -515,7 +535,7 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
                   </>
                 )}
               </div>
-            </div> */}
+            </div>
 
             {/* Appointment Details */}
             {/* <div style={{ borderTopColor: "#e5e7eb", borderTopWidth: "1px", paddingTop: "12px" }}>
@@ -545,7 +565,7 @@ export function PaymentDetailsModal({ isOpen, onClose, paymentData, appointmentD
               className="text-center text-xs"
               style={{ borderTopColor: "#e5e7eb", borderTopWidth: "1px", paddingTop: "12px", color: "#6b7280" }}
             >
-              <p>Thank you for choosing Lifeline Clinics</p>
+              <p>Thank you for choosing {clinicData?.clinicName || "Lifeline Clinics"}</p>
               <p className="mt-2">This is an automated receipt. Please keep it for your records.</p>
             </div>
           </div>
